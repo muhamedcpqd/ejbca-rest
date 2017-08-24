@@ -1,0 +1,253 @@
+FORMAT: 1A
+
+# EJBCA REST API
+
+Endpoints to perform user and certificate management
+
+# Group EJBCA SYSADMIN
+## EJBCA version [/ejbca/version]
+### get EJBCA version [GET]
+Get EJBCA version
+
++ Response 200 (application/json)
+  {
+    "version": "EJBCA 6.3.1.1 Community (r21429)"
+  }
+
+# Group EJBCA CA MANAGEMENT
+## List avalible CAs [/ca]
+### List all avaliable CAs [GET]
+
++ Response 200 (application/json)
+  {
+    "CAs": [
+        {
+            "id": 576968287,
+            "name": "IOTmidCA"
+        },
+        {
+            "id": -1371917878,
+            "name": "PROTOCOL"
+        }
+    ]
+  }
+
+## Check certificate status [/ca/<cacn>/certificate/<certserial>/status]
+### Check if a certificate is revoked [GET]
+if the certificate serial number does not exist EJBCA will return 'not revoked'.
++ Response 400 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: Could not find CA with name null and ID 1992101327"
+  }
++ Response 200 (application/json)
+  {
+    "status": {
+        "date": "2017-08-21T17:26:03.322000+00:00",
+        "reason": "CERTIFICATEHOLD"
+    }
+  }
+
++ Response 200 (application/json)
+  {
+    "status": {
+        "date": "1969-12-31T23:59:59.999000+00:00",
+        "reason": "NOTREVOKED"
+    }
+  }
+
+## Certificate [/ca/<cacn>/certificate/<certserial>]
+### Get the base64 pem certificate [GET]
++ Response 400 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: Could not find CA with name null and ID 1992101327"
+  }
+
++ Response 200 (application/json)
+  {
+    "certificate": {
+        "certificate": null,
+        "keyStore": null,
+        "type": 0,
+        "certificateData": "MIICozCCAYugAwIBAgIIDbsv7z5yerMwDQYJKoZIhvcNAQEFBQAwEzERMA8GA1UE\nAwwIUFJPVE9DT0wwHhcNMTcwODIzMTMyNzI3WhcNMTgwODE2MTc1NjQ0WjATMREw\nDwYDVQQDDAhkZXZpY2UyMjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEApFK8\n/n3xnC7vu7p9lUrYsfKTPhX5GG806zKYLIsgPxdnN8hAZ4VyH1LBTWtecp7/gBbA\nCzryL88a77517Bx9qjlHGXq5pyN30ZJUnGk6DlR4h1Kx2bk8Qr3WFtj8vNfTEJwf\nyTeGsE/N7aquS1MWGLkWDJI7VGRlOk4Nn5jpun0CAwEAAaN/MH0wHQYDVR0OBBYE\nFFrj/21yuPliO7ZnOFbQL4qbaP/KMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU\nQnmx5z1Dm34VkS5UeQVv1yc/nFAwDgYDVR0PAQH/BAQDAgXgMB0GA1UdJQQWMBQG\nCCsGAQUFBwMCBggrBgEFBQcDBDANBgkqhkiG9w0BAQUFAAOCAQEAgpAOo2jtevQv\nx7egcqop9Zlwf9vINmKUEwg4Kvl2dCFOTxRPGPXmOtXgNKm6BKTePAtHsdrhodou\nudDFDYo3dH4a4J3d6cP5p8tmSPVB5SFrS8fl61cUTyzOmmhTHOMZITz+/Zctknv6\nxZXbhcsKrOJMpw6iLupW2AaxOa57/Kq+WrA4s42hkz1+6BeFqlUe3Esp7hWN9CHm\nLfNUVoFR1IuFXDXae+WvKAUEmWWTS0Zd5Tjpy7AHNhaZvFLWYUL7hTjbYlWkVYtv\nCied6kNdL0gxjPlU4XNcWteacR+enaE+dmmhrBjKolERrjoRgEpYdAsv3RcV4zvc\nrJX6NV4i5Q=="
+    }
+  }
+
+### revoke a certificate [DELETE]
+Removes a user certificate
++ Parameters
+  + reason: (optional, enum) - one of REVOKATION_REASON enum values. default: UNSPECIFIED
++ Response 400 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: Could not find end entity certificate. Issuer CN=PROTOCOL, serialNo 4690394092950658023."
+  }
++ Response 400 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: Certificate is already revoked. Issuer: 'CN=PROTOCOL', serno: 5084496247959973."
+  }
++ Response 200 (application/json)
+  {
+    "status": 200,
+    "message": "ok"
+  }
+
+## CRL [/ca/<caname>/crl]
+### Create or update current CRL [PUT]
++ Response 400 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: CA with name caname does not exist."
+  }
+
++ Response 200 (application/json)
+  {
+    "status": 200,
+    "message": "ok"
+  }
+
+### get a CRL [GET]
+Use the command ! openssl asn1parse -inform DER -in crl.der -dump ! to visualize the CRL
++ Parameters
+  + delta: (optional, boolean) - if a elta CRL should be used. default: false
++ Response 400 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: CA with name caname does not exist."
+  }
++ Response 200 (application/json)
+  {
+    "CRL": "MIICQjCCASoCAQEwDQYJKoZIhvcNAQEFBQAwEzERMA8GA1UEAwwIUFJPVE9DT0wXDTE3MDgyMzE3NTcwMVoXDTE3MDgyNDE3NTcwMVowgbEwJwIIENDr9vW0rnYXDTE3MDgxNzE0MjM0NlowDDAKBgNVHRUEAwoBATAnAghdKHQEMc16khcNMTcwODE3MTY0MjU3WjAMMAoGA1UdFQQDCgEBMCcCCAf+JoDWbULbFw0xNzA4MTcxNzE3MDdaMAwwCgYDVR0VBAMKAQEwGQIIUIRJYkeVmXMXDTE3MDgyMzEzMjYwOFowGQIIXjXADkE5iGkXDTE3MDgyMTE3MjYwM1qgLzAtMB8GA1UdIwQYMBaAFEJ5sec9Q5t+FZEuVHkFb9cnP5xQMAoGA1UdFAQDAgEFMA0GCSqGSIb3DQEBBQUAA4IBAQBFkGcgTFya4ayB5dmoLhH4aj70PYZRCzGEpX7RrKdgAwzXV4dQlIkPRirFaPq7fdKS6ipZtj+goiuKwzJsgz26ktcLs2AJS7naOu7NbAJlVEgj4CAAbYTMh6EG8n1AkxWxY9pW8YK1o3YcUKH31h5n6ouQGlY+e6q/7tngJHF48cXznqRPa3Tc1S4KyuZ7L8fmdUBPYxBs8cVEyco7db18YgY8rdb4TcEBxMm1/Tu8XshH4S2SrTH0tfE9OS78qm2dwBKoFnMQtrKD/xDW/HhVZP5z1yLKkQgBC0OPQE8yBDQA9Pkw2HYRdzLZFeKsqxQ4035Gzi2Wn8EkKpGzP7dD"
+  }
+
+# Group EJBCA USER MANAGEMENT
+## Create or edit user [/user]
+### Create or edit a user [POST]
+
++ Request (application/json)
+  + Body
+    {
+        "caName": "PROTOCOL",
+        "certificateProfileName": "ENDUSER",
+        "clearPwd": true,
+        "email": "device21@noemail.com",
+        "endEntityProfileName" : "EMPTY",
+        "extendedInformation": {
+                    "name": "somekey",
+                    "value": "somevalue"
+                },
+        "keyRecoverable": true,
+        "password": "pwd12",
+        "sendNotification": false,
+        "status": 10,
+        "subjectDN": "CN=device21",
+        "tokenType": "USERGENERATED",
+        "username" : "device21"
+    }
+
++ Response 200 (application/json)
+  {
+    "status": 200,
+    "message": "ok"
+  }
+
+## User CRUD [/user/<username>]
+### get user data [GET]
+notice that the repsonse is a list
++ Response 200 (application/json)
+  {
+    "user": [
+        {
+            "caName": "PROTOCOL",
+            "cardNumber": null,
+            "certificateProfileName": "ENDUSER",
+            "certificateSerialNumber": null,
+            "clearPwd": false,
+            "email": "device21@noemail.com",
+            "endEntityProfileName": "EMPTY",
+            "endTime": null,
+            "extendedInformation": [
+                {
+                    "name": "subjectdirattributes",
+                    "value": null
+                },
+                {
+                    "name": "somekey",
+                    "value": "somevalue"
+                }
+            ],
+            "hardTokenIssuerName": null,
+            "keyRecoverable": false,
+            "password": null,
+            "sendNotification": false,
+            "startTime": null,
+            "status": 40,
+            "subjectAltName": null,
+            "subjectDN": "CN=device21",
+            "tokenType": "USERGENERATED",
+            "username": "device21"
+        }
+    ]
+  }
+
+
+### Revoke all cerificates from a user [DELETE]
++ Parameters
+  + reason: (optional, enum) - one of REVOKATION_REASON enum values. default: UNSPECIFIED
+  + delete (optional, boolean) - True if the user should be deleted after the revocation. Default False
++ Response 200 (application/json)
+  {
+    "status": 200,
+    "message": "ok"
+  }
+
+
+## List user valid certificates [/user/<username>/find]
+### List user certs [GET]
++ Parameters
+  + valid: (optional, boolean) - False if revoked certificates should be listed. Default True
+
++ Response 404 (application/json)
+  {
+    "status": 404,
+    "message": "no certificates found"
+  }
++ Response 200 (application/json)
+  {
+    "certs": [
+        {
+            "certificate": null,
+            "keyStore": null,
+            "type": 0,
+            "certificateData": "MIICozCCAYugAwIBAgIIDbsv7z5yerMwDQYJKoZIhvcNAQEFBQAwEzERMA8GA1UE\nAwwIUFJPVE9DT0wwHhcNMTcwODIzMTMyNzI3WhcNMTgwODE2MTc1NjQ0WjATMREw\nDwYDVQQDDAhkZXZpY2UyMjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEApFK8\n/n3xnC7vu7p9lUrYsfKTPhX5GG806zKYLIsgPxdnN8hAZ4VyH1LBTWtecp7/gBbA\nCzryL88a77517Bx9qjlHGXq5pyN30ZJUnGk6DlR4h1Kx2bk8Qr3WFtj8vNfTEJwf\nyTeGsE/N7aquS1MWGLkWDJI7VGRlOk4Nn5jpun0CAwEAAaN/MH0wHQYDVR0OBBYE\nFFrj/21yuPliO7ZnOFbQL4qbaP/KMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU\nQnmx5z1Dm34VkS5UeQVv1yc/nFAwDgYDVR0PAQH/BAQDAgXgMB0GA1UdJQQWMBQG\nCCsGAQUFBwMCBggrBgEFBQcDBDANBgkqhkiG9w0BAQUFAAOCAQEAgpAOo2jtevQv\nx7egcqop9Zlwf9vINmKUEwg4Kvl2dCFOTxRPGPXmOtXgNKm6BKTePAtHsdrhodou\nudDFDYo3dH4a4J3d6cP5p8tmSPVB5SFrS8fl61cUTyzOmmhTHOMZITz+/Zctknv6\nxZXbhcsKrOJMpw6iLupW2AaxOa57/Kq+WrA4s42hkz1+6BeFqlUe3Esp7hWN9CHm\nLfNUVoFR1IuFXDXae+WvKAUEmWWTS0Zd5Tjpy7AHNhaZvFLWYUL7hTjbYlWkVYtv\nCied6kNdL0gxjPlU4XNcWteacR+enaE+dmmhrBjKolERrjoRgEpYdAsv3RcV4zvc\nrJX6NV4i5Q=="
+        }
+    ]
+  }
+
+## Sign a certificate for a user [/user/<username>/pkcs10]
+### Return the signed certificate [POST]
+
++ Request (application/json)
+  In a csv file, generated with the command 'openssl req -new -out server.csr -key server.key'
+  The base64 certificate csv is between the tags '-----BEGIN CERTIFICATE REQUEST-----' and '-----END CERTIFICATE REQUEST-----'
+  + Body
+    {
+      "passwd": "pwd12",
+      "certificate": "MIIBmzCCAQQCAQAwWzELMAkGA1UEBhMCQlIxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDEUMBIGA1UEAwwLQ049ZGV2aWNlMjEwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMAeQ7NOg7YFuoxgB+6thGmy2XRUHua2Sxld4zRYxujvOEcD4XGuTIe3RTGufMBpND3rxHInPMMQh7EQDOr2RCGIXB9jO0MSg6sqFAwXcmRz2OgZ34JCvzflcS4ACMCgxq5pZDou6rtF/VkJnUjxEOIp29ahq+d+w3qVAuy3p1yLAgMBAAGgADANBgkqhkiG9w0BAQsFAAOBgQBBvaa44KeEIzd8/ivl23u7MyM0dLtfZbaw6vfzw35Fx82taID79Y5ZDAXoODmxzhwrnOjjjTllSdXZyU/iR7MbvV/htC5NCO+mFkgmmqNLdMZBLoDlWmAehd/6jwBfQ438uzzOj2dRlIM11wJ4cm0UJzWLhZ2JTRO0973Wo7LnRg=="
+    }
++ Response 404 (application/json)
+  {
+    "status": 400,
+    "message": "soap message: Got request with status GENERATED (40), NEW, FAILED or INPROCESS required: username."
+  }
+
++ Response 200 (application/json)
+  Add a '-----BEGIN PKCS7-----' and '-----END PKCS7-----' before save the given certificate to a file.  
+  {
+    "status": {
+        "data": "MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAaCA\nJIAEBUVKQkNBAAAAAAAAoIAwggKjMIIBi6ADAgECAggNuy/vPnJ6szANBgkqhkiG\n9w0BAQUFADATMREwDwYDVQQDDAhQUk9UT0NPTDAeFw0xNzA4MjMxMzI3MjdaFw0x\nODA4MTYxNzU2NDRaMBMxETAPBgNVBAMMCGRldmljZTIyMIGfMA0GCSqGSIb3DQEB\nAQUAA4GNADCBiQKBgQCkUrz+ffGcLu+7un2VStix8pM+FfkYbzTrMpgsiyA/F2c3\nyEBnhXIfUsFNa15ynv+AFsALOvIvzxrvvnXsHH2qOUcZermnI3fRklScaToOVHiH\nUrHZuTxCvdYW2Py819MQnB/JN4awT83tqq5LUxYYuRYMkjtUZGU6Tg2fmOm6fQID\nAQABo38wfTAdBgNVHQ4EFgQUWuP/bXK4+WI7tmc4VtAvipto/8owDAYDVR0TAQH/\nBAIwADAfBgNVHSMEGDAWgBRCebHnPUObfhWRLlR5BW/XJz+cUDAOBgNVHQ8BAf8E\nBAMCBeAwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEB\nBQUAA4IBAQCCkA6jaO169C/Ht6Byqin1mXB/28g2YpQTCDgq+XZ0IU5PFE8Y9eY6\n1eA0qboEpN48C0ex2uGh2i650MUNijd0fhrgnd3pw/mny2ZI9UHlIWtLx+XrVxRP\nLM6aaFMc4xkhPP79ly2Se/rFlduFywqs4kynDqIu6lbYBrE5rnv8qr5asDizjaGT\nPX7oF4WqVR7cSynuFY30IeYt81RWgVHUi4VcNdp75a8oBQSZZZNLRl3lOOnLsAc2\nFpm8UtZhQvuFONtiVaRVi28KJ53qQ10vSDGM+VThc1xa15pxH56doT52aaGsGMqi\nURGuOhGASlh0Cy/dFxXjO9yslfo1XiLlAAAxggHGMIIBwgIBATBAMDQxETAPBgNV\nBAMMCElPVG1pZENBMRIwEAYDVQQKDAlFSkJDQSBJT1QxCzAJBgNVBAYTAlNFAghI\nCClZsMurFTAJBgUrDgMCGgUAoF0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAc\nBgkqhkiG9w0BCQUxDxcNMTcwODIzMTMzNzI3WjAjBgkqhkiG9w0BCQQxFgQUYCqk\nfK76BhgMMv85scKNGMDUe1cwDQYJKoZIhvcNAQEBBQAEggEAM0Klbd8yJXFqxaV6\n804EGuLPuenpeKQWrD88gJY5vsgQ/U3i7ai/+2fUicllcRXZzleotBaQDkIYRYWN\n6S50QMGHNvME3a2mcQA7PzDyhyCZta0jxu6VDmyBkqymMj6R0ywupga2HabjaSBV\nuGyFVaEaiRdssXeOB1haLX+m3rOOYfuUzfC2iMLbp2ZdPp3z0xm9EKFPMiCwbjVx\npbTVWuYdTbehGJK1JqLjore+9iOgz6YTqiyD/mpe3EpwsDsb5uvG+om4D0Xcw+O/\nVSS9hDTHqveU6M4wYdwgpNdaprV/Tw+bBAocz4CdtijhLiKBHBylcWp+aTUY+uKP\ntU2o1wAAAAAAAA==",
+        "responseType": "PKCS7"
+    }
+  }
