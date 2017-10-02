@@ -5,7 +5,9 @@ import os, stat
 import ssl
 import zeep
 import requests
+import json
 from zeep.transports import Transport
+import zeep.helpers
 
 #the WSDL service class
 global ejbcaWSDLbase
@@ -35,9 +37,9 @@ def retrieveCACert():
     except zeep.exceptions.Fault as error:
         print('Error occurred while loading CA cert chain. soap message: ' + error.message)
         exit(-1)
-    
+
     caCrt = "-----BEGIN CERTIFICATE-----\n" +  cert  + "\n-----END CERTIFICATE-----\n"
-    
+
     with open('/p12/ca.crt', "w") as crtFile:
         crtFile.write(caCrt)
 
@@ -49,10 +51,45 @@ def loadWSDLbase():
     else:
         session.verify = '/p12/ca.crt'
     session.cert = '/p12/superadmin.pem'
-    transport = Transport(session=session)   
+    transport = Transport(session=session)
     ejbcaWSDLbase = zeep.Client('https://localhost:8443/ejbca/ejbcaws/ejbcaws?wsdl', transport=transport)
-    
+
     ejbcaWSDLbase.options(raw_response=True)
+
+def populateProfileDatabase():
+    os.system("cd /root/ejbca-ejb-cli && bash ./ejbca.sh ca importprofiles -d /root/profiles")
+
+def createSubCA(subCaJSON, parentCAID):
+    cmd = "cd /root/ejbca-ejb-cli && bash ejbca.sh ca init --caname " + subCaJSON['name'] + \
+            " --dn CN=" + subCaJSON['name'] + " --tokenType soft  --tokenPass null " + \
+            " --keyspec " + subCaJSON['keysize'] + " --keytype  RSA " + \
+            "-v " + subCaJSON['validity'] + " --policy 'null'  -s SHA256WithRSA " + \
+            "--signedby " + parentCAID
+
+    os.system(cmd)
+
+    for caData in zeep.helpers.serialize_object(ejbcaServ().getAvailableCAs()):
+        if caData['name'] == subCaJSON['name']:
+            caID = caData['id']
+            break
+
+    for sub in subCaJSON['subca']:
+        createSubCA(sub,str(caID) )
+
+def configureCA(cafilePath):
+    populateProfileDatabase()
+    if os.path.isfile(cafilePath):
+        with open(cafilePath) as data_file:
+            caJSON = json.load(data_file)
+
+        for caZepp in  zeep.helpers.serialize_object(ejbcaServ().getAvailableCAs()):
+            if caZepp['name'] == caJSON['name']:
+                caID = caZepp['id']
+                break
+
+        for sub in caJSON['subca']:
+            createSubCA(sub, str(caID) )
+        os.rename(cafilePath, cafilePath + '.bak')
 
 def initicalConf():
     if not os.path.isfile('/p12/superadmin.pem'):
@@ -65,4 +102,5 @@ def initicalConf():
     if not os.path.isfile('/p12/ca.crt'):
         retrieveCACert()
         loadWSDLbase() #if the connection was unsafe, conect again with certificates
-    
+
+    configureCA('/root/CAs/caHierarchy.json')
