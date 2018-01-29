@@ -20,7 +20,7 @@ Pre Configuration
 To configure EJBCA via the web interface, first you need to configure your
 browser certificates.
 
-Copy the client side certificate from you EJBCA instance, located on
+Copy the client side certificate from your EJBCA instance, located on
 '/p12/superadmin.p12' and '/p12/ca.crt' to your local machine.
 
 The way trusted and client certificates are configured vary from browser to
