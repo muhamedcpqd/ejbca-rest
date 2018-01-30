@@ -3,3 +3,5 @@
 *.pyc
 *.log
 *.pem
+.vscode/*
+docs/build/*
