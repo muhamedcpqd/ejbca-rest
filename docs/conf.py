@@ -16,7 +16,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -45,7 +45,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'EJBCA-REST'
+project = u'ejbca-rest'
 copyright = u'2018, CPqD'
 author = u'Giovanni Curiel dos Santos'
 
@@ -181,3 +181,12 @@ epub_exclude_files = ['search.html']
 locale_dirs = ['locale/']  # path is example but recommended
 
 numfig = True
+
+if 'TRAVIS_BRANCH' in os.environ:
+    GIT_BRANCH = os.environ['TRAVIS_BRANCH']
+else:
+    GIT_BRANCH = ''
+
+rst_epilog = """
+    .. _Github pages API description: https://dojot.github.io/{0}/apiary_{1}.html
+""".format(project, GIT_BRANCH)
