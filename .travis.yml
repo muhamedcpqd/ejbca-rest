@@ -3,12 +3,25 @@ sudo: required
 services:
   - docker
 
+cache:
+  directories:
+  - node_modules
+
+before_install:
+  - npm install aglio
+
 script:
-  - docker build -t ejbca .
-  - docker tag ejbca dojot/ejbca:latest
+  - 'docker build -t ${TRAVIS_REPO_SLUG} .'
+  - node_modules/.bin/aglio -i ./docs/apiary.apib -o ./docs/apiary_${TRAVIS_BRANCH}.html
 
 after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push dojot/ejbca:latest;
-    fi
+  - travis/publish.sh
+
+deploy:
+  provider: pages
+  local-dir: ./docs
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+  keep-history: true
+  on:
+    branch: master
