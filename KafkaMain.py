@@ -24,6 +24,30 @@ class KafkaConsumer(Thread):
     def __init__(self):
         Thread.__init__(self)
 
+    def get_topic(service, subject):
+        if service in topic_map.keys():
+            if subject in topic_map[service].keys():
+                return topic_map[service][subject]
+
+        target = "{}/topic/{}".format(CONFIG.data_broker, subject)
+        userinfo = {
+            "username": "device-manager",
+            "service": service
+        }
+
+        jwt = "{}.{}.{}".format(base64.b64encode("model".encode()).decode(),
+                                base64.b64encode(json.dumps(userinfo).encode()).decode(),
+                                base64.b64encode("signature".encode()).decode())
+
+        response = requests.get(target, headers={"authorization": jwt})
+        if 200 <= response.status_code < 300:
+            payload = response.json()
+            if topic_map.get(service, None) is None:
+                topic_map[service] = {}
+            topic_map[service][subject] = payload['topic']
+            return payload['topic']
+        return None
+
     def run(self):
         while True:
             LOGGER.debug("waiting for new messages")
@@ -33,7 +57,7 @@ class KafkaConsumer(Thread):
                 try:
                     consumer = (kafka.
                                 KafkaConsumer(
-                                    'dojot.device-manager.device',
+                                    get_topic('admin', 'dojot.device-manager.device'),
                                     group_id='ejbca',
                                     bootstrap_servers=[conf.kafkaHost]
                                            )
