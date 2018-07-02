@@ -62,7 +62,7 @@ def loadWSDLbase():
     transport = Transport(session=session)
     ejbcaWSDLbase = zeep.Client('https://localhost:8443/ejbca/ejbcaws/ejbcaws?wsdl', transport=transport)
 
-    ejbcaWSDLbase.options(raw_response=True)
+    ejbcaWSDLbase.settings(raw_response=True)
 
 
 def populateProfileDatabase():
