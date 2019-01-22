@@ -15,9 +15,10 @@ RUN mv  /build/profiles /root/ && \
 	mv /etc/apk/repositories /etc/apk/repositories.old && \
 	cat /etc/apk/repositories.old | sed -e 's/3.4/3.6/g' > /etc/apk/repositories  && \
     apk update && apk add --no-cache ca-certificates && update-ca-certificates && \
-	apk add --no-cache bash py2-pip wget openssl-dev  python-dev py-openssl && \
+	apk add --no-cache bash py3-pip wget openssl-dev  python3 py-openssl && \
 	apk add --no-cache gcc linux-headers musl-dev  py-lxml && \
- 	pip2 install requests flask  lxml zeep kafka
+	python3 -m ensurepip && \
+ 	pip3 install requests flask  lxml zeep kafka
 
 RUN wget http://downloads.sourceforge.net/project/ejbca/ejbca6/ejbca_6_3_1_1/ejbca_ce_6_3_1_1.zip \
     && unzip ejbca_ce_6_3_1_1.zip -q

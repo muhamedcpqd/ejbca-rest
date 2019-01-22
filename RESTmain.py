@@ -63,7 +63,8 @@ def getCAChain(cacn):
         cert = zeep.helpers.serialize_object(ejbcaServ().getLastCAChain(cacn))
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-    return make_response(json.dumps({'certificate': cert[0]['certificateData']}), 200)
+
+    return make_response(json.dumps({'certificate': cert[0]['certificateData'].decode('ascii')}), 200)
 
 
 # receive the cert status
@@ -161,7 +162,7 @@ def findUser(username):
 
     try:
         user = zeep.helpers.serialize_object(ejbcaServ().findUser(query))
-        print user
+        print(user)
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
     if len(user) == 0:
@@ -214,7 +215,8 @@ def pkcs10Request(cname):
 
     try:
         info = json.loads(request.data)
-        if not ['passwd', 'certificate'] <= info.keys():
+        keys = info.keys()
+        if 'passwd' not in keys and 'certificate' not in keys:
             return formatResponse(400,
                                   'Missing parameter.'
                                   ' Expected: passwd and certificate')
@@ -233,8 +235,8 @@ def pkcs10Request(cname):
                 )
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-
-    return make_response(json.dumps({'status': resp}), 200)
+    ret = dict(resp)
+    return make_response(json.dumps({'status': str(ret)}), 200)
 
 
 if __name__ == '__main__':
