@@ -18,7 +18,7 @@ RUN mv  /build/profiles /root/ && \
 	apk add --no-cache bash py3-pip wget openssl-dev  python3 py-openssl && \
 	apk add --no-cache gcc linux-headers musl-dev  py-lxml && \
 	python3 -m ensurepip && \
- 	pip3 install requests flask  lxml zeep kafka
+ 	pip3 install requests flask  lxml zeep kafka dojot.module
 
 RUN wget http://downloads.sourceforge.net/project/ejbca/ejbca6/ejbca_6_3_1_1/ejbca_ce_6_3_1_1.zip \
     && unzip ejbca_ce_6_3_1_1.zip -q
