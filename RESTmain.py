@@ -131,7 +131,8 @@ def getLatestCRL(caname):
         resp = ejbcaServ().getLatestCRL(caname, delta)
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-    encoded = b64encode(resp)
+    encoded = b64encode(resp).decode("utf-8")
+
     return make_response(json.dumps({'CRL': encoded}), 200)
 
 
@@ -236,7 +237,15 @@ def pkcs10Request(cname):
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
     ret = dict(resp)
-    return make_response(json.dumps({'status': str(ret)}), 200)
+    ret['data'] = ret['data'].decode('utf-8')
+
+    resp_obj = {
+        'status': {
+            'data': ret['data'],
+            'responseType': ret['responseType']
+        }
+    }
+    return make_response(json.dumps(resp_obj), 200)
 
 
 if __name__ == '__main__':
