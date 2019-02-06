@@ -44,7 +44,7 @@ def formatResponse(status, message=None):
 
 def receiver_kafka(tenant, message):
 
-    message = json.loads(message);
+    message = json.loads(message)
 
     try:
         event = message.get("event")
@@ -280,5 +280,6 @@ if __name__ == '__main__':
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
     messenger.on(config.dojot['subjects']['devices'], "message", receiver_kafka)
     # Gets all devices that are already active on dojot
-    messenger.generate_device_create_event_for_active_devices();
+    messenger.generate_device_create_event_for_active_devices()
     app.run(host='0.0.0.0', port=5583, threaded=True)
+    

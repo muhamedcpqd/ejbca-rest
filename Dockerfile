@@ -1,7 +1,5 @@
 FROM vkyii/jboss:latest
 
-MAINTAINER Alexandre Vasconcellos, alexv@cpqd.com.br
-
 ENV APPSRV_HOME=$JBOSS_HOME \
 	EJBCA_HOME=/build/ejbca_ce_6_3_1_1 \
 	ANT_VER=1.9.6 \
@@ -19,7 +17,7 @@ RUN mv  /build/profiles /root/ && \
 	apk add --no-cache gcc linux-headers musl-dev  py-lxml && \
 	python3 -m ensurepip && \
  	pip3 install requests flask  lxml zeep kafka dojot.module && \
-	apk add python3-dev && \
+	apk add --no-cache python3-dev && \
 	pip3 uninstall -y pyopenssl && \
 	pip3 install pyopenssl
 
