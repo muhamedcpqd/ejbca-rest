@@ -7,7 +7,6 @@ from time import sleep
 # for soap interface
 import zeep
 import zeep.helpers
-
 from flask import Flask
 from flask import request
 from flask import make_response as fmake_response
@@ -20,7 +19,7 @@ import enumList
 from controller.RequestError import RequestError
 import controller.UserController as uc
 from ejbcaUtils import ejbcaServ, initicalConf
-from KafkaMain import KafkaConsumer
+from dojot.module import Messenger, Config
 app = Flask(__name__)
 # CORS(app)
 app.url_map.strict_slashes = False
@@ -43,6 +42,20 @@ def formatResponse(status, message=None):
 
     return make_response(payload, status)
 
+def receiver_kafka(tenant, message):
+
+    message = json.loads(message);
+
+    try:
+        event = message.get("event")
+        if event == "create" or event == "update":
+            message['username'] = message['data']['id']
+            uc.createOrEditUser(message)
+        elif event == "remove":
+            device_id = message['data']['id']
+            uc.deleteUser(device_id)
+    except Exception as e:
+        print(e)
 
 @app.route('/ejbca/version', methods=['GET'])
 def checkVersion():
@@ -259,7 +272,13 @@ if __name__ == '__main__':
             print("Chances are the server is not ready yet.")
             print("Will retry in 30sec")
             sleep(30)
-    KafkaThread = KafkaConsumer()
-    KafkaThread.setName('KafkaThread')
-    KafkaThread.start()
+    # Configure and initalize the messenger
+    config = Config()
+    messenger = Messenger("ejbca-rest", config)
+    messenger.init()
+    # Subscribe to devices topics and register callback to process new events
+    messenger.create_channel(config.dojot['subjects']['devices'], "r")
+    messenger.on(config.dojot['subjects']['devices'], "message", receiver_kafka)
+    # Gets all devices that are already active on dojot
+    messenger.generate_device_create_event_for_active_devices();
     app.run(host='0.0.0.0', port=5583, threaded=True)
