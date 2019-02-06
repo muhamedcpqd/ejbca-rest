@@ -46,7 +46,7 @@ def createOrEditUser(userInfoJson):
     except (zeep.exceptions.Fault, zeep.exceptions.ValidationError) as error:
         raise RequestError(400, 'soap message: ' + error.message)
 
-
+    print(f"user {userInfoJson['username']} created")
 # revoke all certificates of a user.
 # delete the user if deleteAfter is especified
 def deleteUser(username, reason='UNSPECIFIED', deleteAfter=False):
@@ -58,3 +58,5 @@ def deleteUser(username, reason='UNSPECIFIED', deleteAfter=False):
         ejbcaServ().revokeUser(username, reasonCode, deleteAfter)
     except zeep.exceptions.Fault as error:
         raise RequestError(400, 'soap message: ' + error.message)
+    
+    print(f"user {username} deleted")

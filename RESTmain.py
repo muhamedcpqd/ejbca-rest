@@ -7,7 +7,6 @@ from time import sleep
 # for soap interface
 import zeep
 import zeep.helpers
-
 from flask import Flask
 from flask import request
 from flask import make_response as fmake_response
@@ -20,7 +19,7 @@ import enumList
 from controller.RequestError import RequestError
 import controller.UserController as uc
 from ejbcaUtils import ejbcaServ, initicalConf
-from KafkaMain import KafkaConsumer
+from dojot.module import Messenger, Config
 app = Flask(__name__)
 # CORS(app)
 app.url_map.strict_slashes = False
@@ -43,6 +42,20 @@ def formatResponse(status, message=None):
 
     return make_response(payload, status)
 
+def receiver_kafka(tenant, message):
+
+    message = json.loads(message)
+
+    try:
+        event = message.get("event")
+        if event == "create" or event == "update":
+            message['username'] = message['data']['id']
+            uc.createOrEditUser(message)
+        elif event == "remove":
+            device_id = message['data']['id']
+            uc.deleteUser(device_id)
+    except Exception as e:
+        print(e)
 
 @app.route('/ejbca/version', methods=['GET'])
 def checkVersion():
@@ -63,7 +76,8 @@ def getCAChain(cacn):
         cert = zeep.helpers.serialize_object(ejbcaServ().getLastCAChain(cacn))
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-    return make_response(json.dumps({'certificate': cert[0]['certificateData']}), 200)
+
+    return make_response(json.dumps({'certificate': cert[0]['certificateData'].decode('ascii')}), 200)
 
 
 # receive the cert status
@@ -130,7 +144,8 @@ def getLatestCRL(caname):
         resp = ejbcaServ().getLatestCRL(caname, delta)
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-    encoded = b64encode(resp)
+    encoded = b64encode(resp).decode("utf-8")
+
     return make_response(json.dumps({'CRL': encoded}), 200)
 
 
@@ -161,7 +176,7 @@ def findUser(username):
 
     try:
         user = zeep.helpers.serialize_object(ejbcaServ().findUser(query))
-        print user
+        print(user)
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
     if len(user) == 0:
@@ -214,7 +229,8 @@ def pkcs10Request(cname):
 
     try:
         info = json.loads(request.data)
-        if not ['passwd', 'certificate'] <= info.keys():
+        keys = info.keys()
+        if 'passwd' not in keys and 'certificate' not in keys:
             return formatResponse(400,
                                   'Missing parameter.'
                                   ' Expected: passwd and certificate')
@@ -233,8 +249,16 @@ def pkcs10Request(cname):
                 )
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
+    ret = dict(resp)
+    ret['data'] = ret['data'].decode('utf-8')
 
-    return make_response(json.dumps({'status': resp}), 200)
+    resp_obj = {
+        'status': {
+            'data': ret['data'],
+            'responseType': ret['responseType']
+        }
+    }
+    return make_response(json.dumps(resp_obj), 200)
 
 
 if __name__ == '__main__':
@@ -248,7 +272,14 @@ if __name__ == '__main__':
             print("Chances are the server is not ready yet.")
             print("Will retry in 30sec")
             sleep(30)
-    KafkaThread = KafkaConsumer()
-    KafkaThread.setName('KafkaThread')
-    KafkaThread.start()
+    # Configure and initalize the messenger
+    config = Config()
+    messenger = Messenger("ejbca-rest", config)
+    messenger.init()
+    # Subscribe to devices topics and register callback to process new events
+    messenger.create_channel(config.dojot['subjects']['devices'], "r")
+    messenger.on(config.dojot['subjects']['devices'], "message", receiver_kafka)
+    # Gets all devices that are already active on dojot
+    messenger.generate_device_create_event_for_active_devices()
     app.run(host='0.0.0.0', port=5583, threaded=True)
+    

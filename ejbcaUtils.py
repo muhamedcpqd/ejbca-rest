@@ -43,9 +43,9 @@ def retrieveCACert():
     except zeep.exceptions.Fault as error:
         print('Error occurred while loading CA cert chain. soap message: ' + error.message)
         exit(-1)
-
+    certStr = str(cert, 'utf-8')
     caCrt = ("-----BEGIN CERTIFICATE-----\n"
-             + cert + "\n-----END CERTIFICATE-----\n")
+             + certStr + "\n-----END CERTIFICATE-----\n")
 
     with open('/p12/ca.crt', "w") as crtFile:
         crtFile.write(caCrt)
