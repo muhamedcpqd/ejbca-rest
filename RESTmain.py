@@ -18,7 +18,7 @@ import enumList
 
 from controller.RequestError import RequestError
 import controller.UserController as uc
-from ejbcaUtils import ejbcaServ, initicalConf, renewCACRL
+from ejbcaUtils import ejbcaServ, initicalConf, createXMLfromWSDL, returnHistory
 from dojot.module import Messenger, Config
 app = Flask(__name__)
 # CORS(app)
@@ -74,7 +74,7 @@ def getCAChain(cacn):
         cert = zeep.helpers.serialize_object(ejbcaServ().getLastCAChain(cacn))
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-
+    
     return make_response(json.dumps({'certificate': cert[0]['certificateData'].decode('ascii')}), 200)
 
 
@@ -253,7 +253,7 @@ def findCerts(username):
 def pkcs10Request(cname):
     if request.mimetype != 'application/json':
         return formatResponse(400, 'invalid mimetype')
-
+    
     try:
         info = json.loads(request.data)
         keys = info.keys()
