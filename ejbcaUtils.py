@@ -28,11 +28,11 @@ def ejbcaServ():
 
 
 def returnHistory():
-    if history.last_sent['envelope'] != None:
+    if history.last_sent['envelope'] is not None:
         LOGGER.info(ET.tounicode(
             history.last_sent['envelope'], pretty_print=True))
 
-    if history.last_received['envelope'] != None:
+    if history.last_received['envelope'] is not None:
         LOGGER.info(ET.tounicode(
             history.last_received['envelope'], pretty_print=True))
 
