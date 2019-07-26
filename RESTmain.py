@@ -18,7 +18,7 @@ import enumList
 
 from controller.RequestError import RequestError
 import controller.UserController as uc
-from ejbcaUtils import ejbcaServ, initicalConf
+from ejbcaUtils import ejbcaServ, initicalConf, renewCACRL
 from dojot.module import Messenger, Config
 app = Flask(__name__)
 # CORS(app)
@@ -138,6 +138,12 @@ def getLatestCRL(caname):
     if len(request.args) > 0:
         if 'delta' in request.args:
             delta = request.args['delta'] in ['True', 'true']
+
+        if 'update' in request.args:
+            if request.args['update'] in ['True', 'true']:
+                # refresh the crl data
+                renewCACRL(caname)
+
     try:
         resp = ejbcaServ().getLatestCRL(caname, delta)
     except zeep.exceptions.Fault as error:

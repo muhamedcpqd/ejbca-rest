@@ -20,6 +20,12 @@ def ejbcaServ():
     return ejbcaWSDLbase.service
 
 
+def renewCACRL(caname):
+    cmd = "cd /root/ejbca-ejb-cli && bash ejbca.sh ca createcrl --caname " + \
+        caname
+
+    os.system(cmd)
+
 def pfx_to_pem(pfx_path, pfx_password):
     # based on
     # https://gist.github.com/erikbern/756b1d8df2d1487497d29b90e81f8068
