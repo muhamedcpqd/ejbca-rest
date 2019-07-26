@@ -200,7 +200,7 @@ def findUser(username):
         print(user)
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-    if len(user) == 0:
+    if user:
         return formatResponse(404, 'no certificates found')
     return make_response(json.dumps({'user': user}), 200)
 
@@ -262,7 +262,7 @@ def pkcs10Request(cname):
     #(the cert can only be obtained if the user have NEW status)
     # reference: https://araschnia.unam.mx/doc/ws/index.html
 
-    if findUserandReset(cname) == False:
+    if findUserandReset(cname) is False:
         return formatResponse(400, 'User not found to renew..')
 
     try:
