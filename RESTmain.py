@@ -163,6 +163,29 @@ def createOrEditUser():
         return formatResponse(err.errorCode, err.message)
     return formatResponse(200)
 
+def findUserandReset(username):
+    query = {
+                "matchtype": 0,
+                "matchvalue": username,
+                "matchwith": 0
+            }
+
+    try:
+        user = zeep.helpers.serialize_object(ejbcaServ().findUser(query))
+    except zeep.exceptions.Fault as error:
+        print(str(error))
+        return False
+    if len(user) == 0:
+        print("No certificate found")
+        return False
+    
+    form_user = json.loads(json.dumps(user))
+
+    if form_user[0]['status'] != 10:    
+        form_user[0] ['status'] = 10 # NEW = 10
+        ejbcaServ().editUser(form_user)
+
+    return True
 
 @app.route('/user/<username>', methods=['GET'])
 def findUser(username):
@@ -177,7 +200,7 @@ def findUser(username):
         print(user)
     except zeep.exceptions.Fault as error:
         return formatResponse(400, 'soap message: ' + error.message)
-    if len(user) == 0:
+    if user:
         return formatResponse(404, 'no certificates found')
     return make_response(json.dumps({'user': user}), 200)
 
@@ -234,6 +257,13 @@ def pkcs10Request(cname):
                                   ' Expected: passwd and certificate')
     except ValueError:
         return formatResponse(400, 'malformed JSON')
+
+    #First we need to set the user status to new 
+    #(the cert can only be obtained if the user have NEW status)
+    # reference: https://araschnia.unam.mx/doc/ws/index.html
+
+    if findUserandReset(cname) is False:
+        return formatResponse(400, 'User not found to renew..')
 
     try:
         resp = (
