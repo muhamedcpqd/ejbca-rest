@@ -18,7 +18,10 @@ import enumList
 
 from controller.RequestError import RequestError
 import controller.UserController as uc
-from ejbcaUtils import ejbcaServ, initicalConf, createXMLfromWSDL, returnHistory
+
+from ejbcaUtils import ejbcaServ, initicalConf, createXMLfromWSDL, \
+    returnHistory, renewCACRL
+
 from dojot.module import Messenger, Config
 app = Flask(__name__)
 # CORS(app)
