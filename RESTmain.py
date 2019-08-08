@@ -49,11 +49,11 @@ def receiver_kafka(tenant, message):
     message = json.loads(message)
     try:
         event = message.get("event")
+        device_id = message['meta']['service']+':'+message['data']['id']
         if event == "create" or event == "update":
-            message['username'] = message['data']['id']
+            message['username'] = device_id
             uc.createOrEditUser(message)
         elif event == "remove":
-            device_id = message['data']['id']
             uc.deleteUser(device_id)
     except Exception as e:
         print(e)
