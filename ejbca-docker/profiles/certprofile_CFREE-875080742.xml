@@ -358,7 +358,7 @@
   </void>
   <void method="put">
    <string>useauthorityinformationaccess</string>
-   <boolean>false</boolean>
+   <boolean>true</boolean>
   </void>
   <void method="put">
    <string>caissuers</string>
@@ -370,7 +370,7 @@
   </void>
   <void method="put">
    <string>ocspservicelocatoruri</string>
-   <string></string>
+   <string>"http://localhost:8080/ejbca/publicweb/status/ocsp"</string>
   </void>
   <void method="put">
    <string>cvcaccessrights</string>
