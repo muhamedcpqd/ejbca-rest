@@ -104,6 +104,15 @@ def populateProfileDatabase():
 def updateCRL():
     os.system("/etc/periodic/daily/createcrl.sh")
 
+# defines a subject DN to be used as our OCSP provider
+
+
+def setOCSPResponder(SubjectDN):   
+    cmd = "cd /root/ejbca-ejb-cli && bash ejbca.sh ocsp " + \
+        "setdefaultresponder --dn " + SubjectDN
+
+    os.system(cmd)
+
 
 def createSubCA(subCaJSON, parentCAID):
     cmd = "cd /root/ejbca-ejb-cli && bash ejbca.sh ca init --caname " + subCaJSON['name'] + \
@@ -153,4 +162,8 @@ def initicalConf():
         loadWSDLbase()
 
     configureCA('/root/CAs/caHierarchy.json')
+
+    # Here we set an ocsp responder to publish cert revokation status
+    subjectDN = '"CN=IOTmidCA,O=EJBCA IOT,C=SE"'
+    setOCSPResponder(subjectDN)
     updateCRL()
